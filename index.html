@@ -75,6 +75,31 @@
             font-size: 0.9rem;
         }
 
+        /* 新增样式，确保页脚段落文字左右居中 */
+        footer p {
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        /* 新增二维码样式 */
+        .qr-code-container {
+            margin-top: 1rem;
+        }
+
+        .qr-code-image {
+            max-width: 150px; /* 最大宽度 */
+            width: 100%; /* 自适应宽度 */
+            height: auto; /* 保持比例 */
+            margin: 0 auto;
+            display: block;
+        }
+
+        .qr-code-label {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+
         h1 {
             text-align: center;
             color: var(--secondary-color);
@@ -1244,6 +1269,10 @@
     </main>
     <footer>
         <p>&copy; 2025 股票数据展示. 保留所有权利.</p>
+        <div class="qr-code-container">
+            <img src="/Users/romanzhao/PycharmProjects/futu-script/img/qrcode.png" alt="激励/捐献作者二维码" class="qr-code-image">
+            <span class="qr-code-label">激励/捐献作者</span>
+        </div>
     </footer>
 </body>
 </html>
