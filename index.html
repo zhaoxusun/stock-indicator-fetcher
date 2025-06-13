@@ -422,7 +422,7 @@
     <header>
         <!-- 新增数据更新时间和提示 -->
         <div class="update-info">
-            <p>数据更新时间：2025-06-13 16:00:18</p>
+            <p>数据更新时间：2025-06-13 16:06:36</p>
         </div>
         <h1>股票指标数据展示</h1>
         <h2><strong>投资需谨慎，本文内容不构成任何投资建议</strong></h2>
@@ -3987,12 +3987,18 @@
     <!-- Default Statcounter code for stock-indicator-fetcher
     https://zhaoxusun.github.io/stock-indicator-fetcher/ -->
     <script type="text/javascript">
-    var sc_project=13143717; 
-    var sc_invisible=0; 
-    var sc_security="aad85500"; 
-    var scJsHost = "https://";
-    document.write("<sc"+"ript type='text/javascript' src='" + scJsHost+
-    "statcounter.com/counter/counter.js'></"+"script>");
+        var sc_project = 13143717; 
+        var sc_invisible = 0; 
+        var sc_security = "aad85500"; 
+        var scJsHost = "https://";
+
+        // Dynamically create a script element
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = scJsHost + 'statcounter.com/counter/counter.js';
+
+        // Append the script to the document body
+        document.body.appendChild(script);
     </script>
     <noscript><div class="statcounter"><a title="Web Analytics Made Easy -
     Statcounter" href="https://statcounter.com/" target="_blank"><img
