@@ -1,0 +1,1211 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>股票量价指标-买卖信号🔔🔔🔔</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --table-bg-color: #ffffff;
+            --header-bg-color: #34495e;
+            --recent-row-bg-color: #e8f5e9;
+            --hover-bg-color: #f1f8e9;
+            --directory-bg-color: #ffffff;
+            --directory-hover-color: #f5f5f5;
+            --directory-active-color: #e0e0e0;
+            --progress-bar-bg: #eeeeee;
+            --buy-signal-color: #4caf50;
+            --sell-signal-color: #f44336;
+            --header-footer-bg: #2c3e50;
+            --header-footer-text: #ffffff;
+        }
+
+        body {
+            padding: 0;
+            background: var(--background-gradient);
+            font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--primary-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0; /* 移除 body 默认外边距 */
+        }
+
+        header {
+            background-color: var(--header-footer-bg);
+            color: var(--header-footer-text);
+            padding: 2rem;
+            text-align: center;
+            position: relative; /* 新增，用于定位子元素 */
+        }
+
+        header h1 {
+            color: var(--header-footer-text);
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 2.5rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        header h2 {
+            color: var(--header-footer-text);
+            margin-bottom: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* 新增数据更新时间和提示样式 */
+        .update-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            text-align: right;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto; /* 内容区域居中 */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        footer {
+            background-color: var(--header-footer-bg);
+            color: var(--header-footer-text);
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* 新增样式，确保页脚段落文字左右居中 */
+        footer p {
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        /* 新增二维码样式 */
+        .qr-code-container {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .qr-images-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .qr-code-image {
+            max-width: 150px; /* 最大宽度 */
+            width: 100%; /* 自适应宽度 */
+            height: auto; /* 保持比例 */
+            margin: 0 auto;
+            display: block;
+        }
+
+        .qr-code-label {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 2.5rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        p {
+            text-align: justify;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+            color: #555;
+        }
+
+        .table-container {
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+            background-color: var(--table-bg-color);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .table-container.active {
+            display: block;
+        }
+
+        /* 新增表格滚动容器样式 */
+        .table-scroll-container {
+            overflow-x: auto; /* 支持水平滚动 */
+            -webkit-overflow-scrolling: touch; /* 优化移动端滚动体验 */
+            margin-bottom: 2rem;
+        }
+
+        #table-directory {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            background-color: var(--directory-bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        #table-directory li {
+            background-color: transparent;
+            color: var(--secondary-color);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px solid transparent;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            position: relative; /* 用于定位小绿点和小红点 */
+        }
+
+        #table-directory li:hover {
+            background-color: var(--directory-hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #table-directory li.active {
+            background-color: var(--directory-active-color);
+            border-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        /* 小绿点和小红点样式 */
+        .signal-dot {
+            position: absolute;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .buy-dot {
+            background-color: var(--buy-signal-color);
+            right: 18px; /* 小绿点在小红点左边 */
+        }
+
+        .sell-dot {
+            background-color: var(--sell-signal-color);
+            right: 5px;
+        }
+
+        table {
+            width: 100%; /* 让表格宽度占满容器 */
+            border-collapse: collapse;
+            background-color: var(--table-bg-color);
+            min-width: 600px; /* 设置表格最小宽度 */
+        }
+
+        th, td {
+            padding: 1.2rem 1.5rem;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            vertical-align: middle;
+            transition: background-color 0.3s ease;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+            white-space: normal; /* 允许单元格内容换行 */
+        }
+
+        th {
+            background-color: var(--header-bg-color);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr.recent-row {
+            background-color: var(--recent-row-bg-color);
+        }
+
+        tr:hover {
+            background-color: var(--hover-bg-color);
+        }
+
+        .table-separator {
+            height: 2rem;
+            display: block;
+        }
+
+        .progress-bar {
+            background-color: var(--progress-bar-bg);
+            border-radius: 20px;
+            height: 14px;
+            overflow: hidden;
+            margin-top: 0.8rem;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .buy-signal {
+            background-color: var(--buy-signal-color);
+        }
+
+        .sell-signal {
+            background-color: var(--sell-signal-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            header {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            header h2 {
+                font-size: 1.2rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            th, td {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.7rem;
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            #table-directory {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                padding: 0.8rem;
+            }
+
+            #table-directory li {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .table-container {
+                min-height: 150px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .progress-bar {
+                height: 8px;
+            }
+
+            table {
+                min-width: 400px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            th, td {
+                padding: 0.3rem 0.4rem;
+                font-size: 0.6rem;
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            #table-directory {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                padding: 0.4rem;
+            }
+
+            #table-directory li {
+                padding: 0.3rem 0.4rem;
+                font-size: 0.6rem;
+            }
+
+            .progress-bar {
+                height: 6px;
+            }
+
+            table {
+                min-width: 300px;
+            }
+        }
+
+        /* 新增单选按钮样式 */
+        .days-selector {
+            display: flex;
+            justify-content: flex-end; /* 右对齐 */
+            margin-bottom: 2rem;
+            gap: 1rem;
+            align-items: center; /* 垂直居中 */
+        }
+
+        .days-selector-label {
+            font-size: 0.8rem; /* 减小字体大小 */
+            color: var(--primary-color);
+        }
+
+        .days-selector input[type="radio"] {
+            display: none;
+        }
+
+        .days-selector label {
+            background-color: var(--directory-bg-color);
+            color: var(--secondary-color);
+            padding: 0.4rem 0.8rem; /* 减小内边距 */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem; /* 减小字体大小 */
+        }
+
+        .days-selector label:hover {
+            background-color: var(--directory-hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .days-selector input[type="radio"]:checked + label {
+            background-color: var(--directory-active-color);
+            border-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- 新增数据更新时间和提示 -->
+        <div class="update-info">
+            <p>数据更新时间：2025-07-24 15:33:33</p>
+        </div>
+        <h1>股票指标数据展示</h1>
+        <h2><strong>投资需谨慎，本文内容不构成任何投资建议</strong></h2>
+    </header>
+    <main>
+        <!-- 新增单选按钮组 -->
+        <div class="days-selector">
+            <span class="days-selector-label">请选择近X天内买入卖出信号：</span>
+            <input type="radio" id="7days" name="days" value="7">
+            <label for="7days">7 天</label>
+            <input type="radio" id="30days" name="days" value="30">
+            <label for="30days">30 天</label>
+            <input type="radio" id="90days" name="days" value="90" checked>
+            <label for="90days">90 天</label>
+        </div>
+        <p>本页面展示了多支股票的相关指标数据，表格中包含了买入信号、卖出信号等信息(基于量价关系，XX_5为短期信号，XX_20为长期信号)。其中，<span style="color: var(--buy-signal-color); font-weight: bold;">绿色背景</span> 的行表示日期在近 90 天内的数据，并且每个信号列都通过进度条展示了当前值相对于该列最大值的百分比，占比表示可能的机会大小。</p>
+        <ul id="table-directory">
+    <li onclick="showTable('table-0', this)" id="dir-item-0">老铺黄金<div class="signal-dot buy-dot" style="display: none;"></div><div class="signal-dot sell-dot" style="display: none;"></div></li><li onclick="showTable('table-1', this)" id="dir-item-1">赤峰黄金<div class="signal-dot buy-dot" style="display: none;"></div><div class="signal-dot sell-dot" style="display: none;"></div></li><li onclick="showTable('table-2', this)" id="dir-item-2">中远海控<div class="signal-dot buy-dot" style="display: none;"></div><div class="signal-dot sell-dot" style="display: none;"></div></li>
+        </ul>
+    <div class="table-container" id="table-0"><div class="table-scroll-container"><table><tr><th></th><th>股票代码</th><th>股票名称</th><th>日期</th><th>开盘价</th><th>收盘价</th><th>BUY_SIGNAL_5</th><th>SELL_SIGNAL_5</th><th>BUY_SIGNAL_20</th><th>SELL_SIGNAL_20</th></tr><tr class=''><td>1</td><td>HK.06181</td><td>老铺黄金</td><td>2024-08-08</td><td>73.97</td><td>75.32</td><td>-</td>
+                        <td>
+                            119248.0
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.04659968535977479%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            10220924.0
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 3.6752988855204185%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>2</td><td>HK.06181</td><td>老铺黄金</td><td>2024-08-14</td><td>79.77</td><td>80.37</td><td>-</td>
+                        <td>
+                            531760.0
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.2078009583969026%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            23170671.0
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 8.33184370640661%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>3</td><td>HK.06181</td><td>老铺黄金</td><td>2024-08-29</td><td>84.27</td><td>82.92</td>
+                        <td>
+                            -656978.6
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 0.25657544230278223%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>4</td><td>HK.06181</td><td>老铺黄金</td><td>2024-09-05</td><td>84.72</td><td>86.62</td><td>-</td>
+                        <td>
+                            48524.8
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.018962501779031932%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class=''><td>5</td><td>HK.06181</td><td>老铺黄金</td><td>2024-09-19</td><td>111.12</td><td>123.12</td><td>-</td>
+                        <td>
+                            5029968.66
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 1.965609124895411%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            15890138.56
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 5.713867801025918%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>6</td><td>HK.06181</td><td>老铺黄金</td><td>2024-09-27</td><td>136.82</td><td>143.72</td><td>-</td><td>-</td><td>-</td>
+                        <td>
+                            8539393.36
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 3.0706443858723986%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>7</td><td>HK.06181</td><td>老铺黄金</td><td>2024-10-17</td><td>149.92</td><td>149.22</td>
+                        <td>
+                            -548791.97
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 0.21432439722536656%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>8</td><td>HK.06181</td><td>老铺黄金</td><td>2024-11-20</td><td>184.02</td><td>195.32</td><td>-</td>
+                        <td>
+                            2978322.76
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 1.163867767307259%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class=''><td>9</td><td>HK.06181</td><td>老铺黄金</td><td>2024-11-26</td><td>188.12</td><td>182.52</td>
+                        <td>
+                            -1447397.42
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 0.5652644290459474%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -1498233.36
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 0.8786107105203518%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>10</td><td>HK.06181</td><td>老铺黄金</td><td>2024-12-13</td><td>225.92</td><td>229.72</td><td>-</td>
+                        <td>
+                            4340614.6
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 1.6962236232728825%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            14162607.02
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 5.092672032065756%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>11</td><td>HK.06181</td><td>老铺黄金</td><td>2024-12-20</td><td>206.72</td><td>201.12</td>
+                        <td>
+                            -1049940.32
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 0.4100421261750759%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -177069.05
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 0.10383880641375097%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>12</td><td>HK.06181</td><td>老铺黄金</td><td>2025-01-22</td><td>336.92</td><td>341.32</td><td>-</td>
+                        <td>
+                            7347992.54
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 2.8714455621056314%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            22351443.3
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 8.037261078378318%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>13</td><td>HK.06181</td><td>老铺黄金</td><td>2025-02-14</td><td>451.32</td><td>486.12</td><td>-</td>
+                        <td>
+                            20136720.94
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 7.869019689903298%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            49676648.91
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 17.86301633544209%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>14</td><td>HK.06181</td><td>老铺黄金</td><td>2025-03-25</td><td>670.12</td><td>624.62</td>
+                        <td>
+                            -16550982.0
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 6.463795817999837%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -2223307.63
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 1.3038168476635836%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>15</td><td>HK.06181</td><td>老铺黄金</td><td>2025-04-23</td><td>773.12</td><td>734.12</td>
+                        <td>
+                            -8726397.16
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 3.407994128022957%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>16</td><td>HK.06181</td><td>老铺黄金</td><td>2025-04-24</td><td>745.62</td><td>721.12</td>
+                        <td>
+                            -15779980.94
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 6.162690214277868%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class='recent-row'><td>17</td><td>HK.06181</td><td>老铺黄金</td><td>2025-05-21</td><td>754.12</td><td>794.12</td><td>-</td>
+                        <td>
+                            50694877.04
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 19.81052360975841%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            55573546.73
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 19.983456912622174%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class='recent-row'><td>18</td><td>HK.06181</td><td>老铺黄金</td><td>2025-05-22</td><td>795.0</td><td>844.0</td><td>-</td>
+                        <td>
+                            23346905.43
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 9.123494290574412%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            50888972.24
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 18.29895056053166%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class='recent-row'><td>19</td><td>HK.06181</td><td>老铺黄金</td><td>2025-06-19</td><td>878.0</td><td>816.5</td>
+                        <td>
+                            -31748943.36
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 12.399184973814949%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -34807589.45
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 20.412254669169293%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class='recent-row'><td>20</td><td>HK.06181</td><td>老铺黄金</td><td>2025-06-27</td><td>868.5</td><td>877.0</td><td>-</td>
+                        <td>
+                            1525907.6
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.5962935566893288%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class='recent-row'><td>21</td><td>HK.06181</td><td>老铺黄金</td><td>2025-06-30</td><td>894.5</td><td>1008.0</td><td>-</td>
+                        <td>
+                            255898723.52
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            278097763.43
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class='recent-row'><td>22</td><td>HK.06181</td><td>老铺黄金</td><td>2025-07-08</td><td>1039.0</td><td>1082.0</td><td>-</td>
+                        <td>
+                            16726218.06
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 6.536264749555403%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class='recent-row'><td>23</td><td>HK.06181</td><td>老铺黄金</td><td>2025-07-11</td><td>1016.0</td><td>900.0</td>
+                        <td>
+                            -256056695.88
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -78653588.55
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 46.12491429298497%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class='recent-row'><td>24</td><td>HK.06181</td><td>老铺黄金</td><td>2025-07-14</td><td>888.0</td><td>876.0</td>
+                        <td>
+                            -57591279.76
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 22.49161247749207%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -46710025.19
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 27.3922137340537%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class='recent-row'><td>25</td><td>HK.06181</td><td>老铺黄金</td><td>2025-07-22</td><td>856.0</td><td>834.5</td>
+                        <td>
+                            -3495686.2
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 1.3652000733611904%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class='recent-row'><td>26</td><td>HK.06181</td><td>老铺黄金</td><td>2025-07-23</td><td>838.0</td><td>786.5</td>
+                        <td>
+                            -62600701.5
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 24.447984570314688%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -170523002.06
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class='recent-row'><td>27</td><td>HK.06181</td><td>老铺黄金</td><td>2025-07-24</td><td>788.0</td><td>783.0</td>
+                        <td>
+                            -6703320.48
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 2.6179047796279797%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr></table></div><div class='table-separator'></div></div><div class="table-container" id="table-1"><div class="table-scroll-container"><table><tr><th></th><th>股票代码</th><th>股票名称</th><th>日期</th><th>开盘价</th><th>收盘价</th><th>BUY_SIGNAL_5</th><th>SELL_SIGNAL_5</th><th>BUY_SIGNAL_20</th><th>SELL_SIGNAL_20</th></tr><tr class=''><td>1</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-03-28</td><td>14.97</td><td>15.07</td><td>-</td>
+                        <td>
+                            2028153.25
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 3.968703609790903%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            133065238.82
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 42.05295240093567%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>2</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-03-31</td><td>15.33</td><td>16.29</td><td>-</td>
+                        <td>
+                            16027498.95
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 31.36271528731121%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            316423060.03
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>3</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-04-08</td><td>16.73</td><td>17.03</td><td>-</td><td>-</td><td>-</td>
+                        <td>
+                            17156736.75
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 5.422087994589704%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>4</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-04-09</td><td>16.83</td><td>17.05</td><td>-</td><td>-</td><td>-</td>
+                        <td>
+                            25482046.46
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 8.05315720592047%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>5</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-04-10</td><td>17.83</td><td>19.98</td><td>-</td>
+                        <td>
+                            25653385.79
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 50.19871392269379%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            129126979.05
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 40.80833395573556%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class='recent-row'><td>6</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-05-07</td><td>27.13</td><td>28.43</td><td>-</td>
+                        <td>
+                            26439740.27
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 51.737457537532194%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class='recent-row'><td>7</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-05-21</td><td>26.88</td><td>29.03</td><td>-</td>
+                        <td>
+                            51103671.36
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class='recent-row'><td>8</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-06-10</td><td>27.63</td><td>28.48</td><td>-</td>
+                        <td>
+                            210625.51
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.41215338232012305%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class='recent-row'><td>9</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-06-26</td><td>28.0</td><td>27.7</td>
+                        <td>
+                            -1068400.19
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 34.05679703053089%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class='recent-row'><td>10</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-07-04</td><td>26.65</td><td>25.8</td>
+                        <td>
+                            -3137112.95
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class='recent-row'><td>11</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-07-07</td><td>25.35</td><td>24.95</td>
+                        <td>
+                            -2356756.92
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 75.12502602113832%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class='recent-row'><td>12</td><td>HK.06693</td><td>赤峰黄金</td><td>2025-07-15</td><td>25.0</td><td>25.1</td><td>-</td>
+                        <td>
+                            300753.02
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.5885154862580112%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr></table></div><div class='table-separator'></div></div><div class="table-container" id="table-2"><div class="table-scroll-container"><table><tr><th></th><th>股票代码</th><th>股票名称</th><th>日期</th><th>开盘价</th><th>收盘价</th><th>BUY_SIGNAL_5</th><th>SELL_SIGNAL_5</th><th>BUY_SIGNAL_20</th><th>SELL_SIGNAL_20</th></tr><tr class=''><td>1</td><td>HK.01919</td><td>中远海控</td><td>2024-08-30</td><td>9.19</td><td>9.01</td>
+                        <td>
+                            -786181.76
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 3.8026799967929437%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>2</td><td>HK.01919</td><td>中远海控</td><td>2024-09-05</td><td>8.75</td><td>8.43</td>
+                        <td>
+                            -2839680.23
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 13.73524006447235%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -7516891.0
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 11.111037116932868%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>3</td><td>HK.01919</td><td>中远海控</td><td>2024-09-09</td><td>8.33</td><td>8.09</td>
+                        <td>
+                            -14381705.71
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 69.5628255521724%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -30625253.94
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 45.26849374865681%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>4</td><td>HK.01919</td><td>中远海控</td><td>2024-09-10</td><td>8.11</td><td>8.04</td><td>-</td><td>-</td>
+                        <td>
+                            -7170048.4
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 10.598354280061416%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>5</td><td>HK.01919</td><td>中远海控</td><td>2024-09-24</td><td>9.81</td><td>10.21</td><td>-</td>
+                        <td>
+                            5311956.11
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 25.300362520087454%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            16647436.54
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 40.416916743372404%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>6</td><td>HK.01919</td><td>中远海控</td><td>2024-10-30</td><td>10.54</td><td>10.22</td>
+                        <td>
+                            -3609075.15
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 17.45672384949187%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>7</td><td>HK.01919</td><td>中远海控</td><td>2024-11-12</td><td>10.8</td><td>10.4</td>
+                        <td>
+                            -1919411.8
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 9.283996689860038%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>8</td><td>HK.01919</td><td>中远海控</td><td>2024-11-25</td><td>10.48</td><td>10.4</td>
+                        <td>
+                            -1103889.37
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 5.339398901815485%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>9</td><td>HK.01919</td><td>中远海控</td><td>2024-11-26</td><td>10.24</td><td>9.92</td>
+                        <td>
+                            -8676142.97
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 41.9656077003551%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>10</td><td>HK.01919</td><td>中远海控</td><td>2024-12-13</td><td>10.72</td><td>11.08</td><td>-</td>
+                        <td>
+                            15621190.32
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 74.4023048961677%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            31291071.66
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 75.96897186268654%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>11</td><td>HK.01919</td><td>中远海控</td><td>2024-12-16</td><td>11.08</td><td>11.36</td><td>-</td>
+                        <td>
+                            5983755.47
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 28.500081606012422%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            22583225.17
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 54.82792076122984%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>12</td><td>HK.01919</td><td>中远海控</td><td>2024-12-17</td><td>11.3</td><td>11.38</td><td>-</td><td>-</td><td>-</td>
+                        <td>
+                            17421256.78
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 42.29561008689522%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>13</td><td>HK.01919</td><td>中远海控</td><td>2025-01-09</td><td>11.08</td><td>10.5</td>
+                        <td>
+                            -14951338.74
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 72.31808170145466%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -16294765.79
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 24.085988143824082%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>14</td><td>HK.01919</td><td>中远海控</td><td>2025-02-03</td><td>10.48</td><td>10.2</td>
+                        <td>
+                            -1098639.06
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 5.31400369446043%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class=''><td>15</td><td>HK.01919</td><td>中远海控</td><td>2025-02-07</td><td>10.82</td><td>11.08</td><td>-</td>
+                        <td>
+                            2114983.97
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 10.073475769959586%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class=''><td>16</td><td>HK.01919</td><td>中远海控</td><td>2025-02-24</td><td>10.82</td><td>10.56</td>
+                        <td>
+                            -20674412.8
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -13148938.13
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 19.436006137468787%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class=''><td>17</td><td>HK.01919</td><td>中远海控</td><td>2025-03-18</td><td>10.86</td><td>10.88</td><td>-</td>
+                        <td>
+                            148719.76
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 0.7083386541573669%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            948740.39
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 2.303367323946241%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>18</td><td>HK.01919</td><td>中远海控</td><td>2025-03-20</td><td>10.9</td><td>11.18</td><td>-</td>
+                        <td>
+                            2219223.65
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 10.569959859504879%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            5889192.71
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 14.297877686683508%;"></div>
+                            </div>
+                        </td>
+                        </tr><tr class=''><td>19</td><td>HK.01919</td><td>中远海控</td><td>2025-04-08</td><td>9.2</td><td>9.08</td>
+                        <td>
+                            -14628304.69
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 70.75559935612777%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            -67652469.53
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td></tr><tr class='recent-row'><td>20</td><td>HK.01919</td><td>中远海控</td><td>2025-05-07</td><td>11.1</td><td>11.2</td><td>-</td>
+                        <td>
+                            2359417.8
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 11.237691810738097%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td></tr><tr class='recent-row'><td>21</td><td>HK.01919</td><td>中远海控</td><td>2025-07-08</td><td>13.8</td><td>13.5</td>
+                        <td>
+                            -958858.97
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill buy-signal" style="width: 4.637901831968838%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td><td>-</td><td>-</td></tr><tr class='recent-row'><td>22</td><td>HK.01919</td><td>中远海控</td><td>2025-07-22</td><td>14.16</td><td>14.74</td><td>-</td>
+                        <td>
+                            20995573.11
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        <td>-</td>
+                        <td>
+                            41189278.85
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill sell-signal" style="width: 100.0%;"></div>
+                            </div>
+                        </td>
+                        </tr></table></div><div class='table-separator'></div></div>
+    <script>
+        const allData = [[{"time_key": "2024-08-08", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 119248.0, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 10220924.0}, {"time_key": "2024-08-14", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 531760.0, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 23170671.0}, {"time_key": "2024-08-29", "BUY_SIGNAL_5": -656978.6, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-09-05", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 48524.8, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-09-19", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 5029968.66, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 15890138.56}, {"time_key": "2024-09-27", "BUY_SIGNAL_5": NaN, "SELL_SIGNAL_5": NaN, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 8539393.36}, {"time_key": "2024-10-17", "BUY_SIGNAL_5": -548791.97, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-11-20", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 2978322.76, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-11-26", "BUY_SIGNAL_5": -1447397.42, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -1498233.36, "SELL_SIGNAL_20": 0.0}, {"time_key": "2024-12-13", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 4340614.6, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 14162607.02}, {"time_key": "2024-12-20", "BUY_SIGNAL_5": -1049940.32, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -177069.05, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-01-22", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 7347992.54, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 22351443.3}, {"time_key": "2025-02-14", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 20136720.94, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 49676648.91}, {"time_key": "2025-03-25", "BUY_SIGNAL_5": -16550982.0, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -2223307.63, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-04-23", "BUY_SIGNAL_5": -8726397.16, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-04-24", "BUY_SIGNAL_5": -15779980.94, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-05-21", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 50694877.04, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 55573546.73}, {"time_key": "2025-05-22", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 23346905.43, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 50888972.24}, {"time_key": "2025-06-19", "BUY_SIGNAL_5": -31748943.36, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -34807589.45, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-06-27", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 1525907.6, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-06-30", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 255898723.52, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 278097763.43}, {"time_key": "2025-07-08", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 16726218.06, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-11", "BUY_SIGNAL_5": -256056695.88, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -78653588.55, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-07-14", "BUY_SIGNAL_5": -57591279.76, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -46710025.19, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-07-22", "BUY_SIGNAL_5": -3495686.2, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-23", "BUY_SIGNAL_5": -62600701.5, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -170523002.06, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-07-24", "BUY_SIGNAL_5": -6703320.48, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}], [{"time_key": "2025-03-28", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 2028153.25, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 133065238.82}, {"time_key": "2025-03-31", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 16027498.95, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 316423060.03}, {"time_key": "2025-04-08", "BUY_SIGNAL_5": NaN, "SELL_SIGNAL_5": NaN, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 17156736.75}, {"time_key": "2025-04-09", "BUY_SIGNAL_5": NaN, "SELL_SIGNAL_5": NaN, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 25482046.46}, {"time_key": "2025-04-10", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 25653385.79, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 129126979.05}, {"time_key": "2025-05-07", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 26439740.27, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-05-21", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 51103671.36, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-06-10", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 210625.51, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-06-26", "BUY_SIGNAL_5": -1068400.19, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-04", "BUY_SIGNAL_5": -3137112.95, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-07", "BUY_SIGNAL_5": -2356756.92, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-15", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 300753.02, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}], [{"time_key": "2024-08-30", "BUY_SIGNAL_5": -786181.76, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-09-05", "BUY_SIGNAL_5": -2839680.23, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -7516891.0, "SELL_SIGNAL_20": 0.0}, {"time_key": "2024-09-09", "BUY_SIGNAL_5": -14381705.71, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -30625253.94, "SELL_SIGNAL_20": 0.0}, {"time_key": "2024-09-10", "BUY_SIGNAL_5": NaN, "SELL_SIGNAL_5": NaN, "BUY_SIGNAL_20": -7170048.4, "SELL_SIGNAL_20": 0.0}, {"time_key": "2024-09-24", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 5311956.11, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 16647436.54}, {"time_key": "2024-10-30", "BUY_SIGNAL_5": -3609075.15, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-11-12", "BUY_SIGNAL_5": -1919411.8, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-11-25", "BUY_SIGNAL_5": -1103889.37, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-11-26", "BUY_SIGNAL_5": -8676142.97, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2024-12-13", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 15621190.32, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 31291071.66}, {"time_key": "2024-12-16", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 5983755.47, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 22583225.17}, {"time_key": "2024-12-17", "BUY_SIGNAL_5": NaN, "SELL_SIGNAL_5": NaN, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 17421256.78}, {"time_key": "2025-01-09", "BUY_SIGNAL_5": -14951338.74, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -16294765.79, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-02-03", "BUY_SIGNAL_5": -1098639.06, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-02-07", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 2114983.97, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-02-24", "BUY_SIGNAL_5": -20674412.8, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -13148938.13, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-03-18", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 148719.76, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 948740.39}, {"time_key": "2025-03-20", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 2219223.65, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 5889192.71}, {"time_key": "2025-04-08", "BUY_SIGNAL_5": -14628304.69, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": -67652469.53, "SELL_SIGNAL_20": 0.0}, {"time_key": "2025-05-07", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 2359417.8, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-08", "BUY_SIGNAL_5": -958858.97, "SELL_SIGNAL_5": 0.0, "BUY_SIGNAL_20": NaN, "SELL_SIGNAL_20": NaN}, {"time_key": "2025-07-22", "BUY_SIGNAL_5": 0.0, "SELL_SIGNAL_5": 20995573.11, "BUY_SIGNAL_20": 0.0, "SELL_SIGNAL_20": 41189278.85}]];
+        const now = new Date();
+
+        function updateDots(days) {
+            const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+            const dirItems = document.querySelectorAll('#table-directory li');
+
+            allData.forEach((stockData, index) => {
+                const dirItem = dirItems[index];
+                const buyDot = dirItem.querySelector('.buy-dot');
+                const sellDot = dirItem.querySelector('.sell-dot');
+
+                let hasBuySignal = false;
+                let hasSellSignal = false;
+
+                stockData.forEach(item => {
+                    // 将日期字符串解析为 Date 对象
+                    const itemDate = new Date(item.time_key);
+                    if (itemDate > cutoffDate) {
+                        if (item.BUY_SIGNAL_5 !== 0 || item.BUY_SIGNAL_20 !== 0) {
+                            hasBuySignal = true;
+                        }
+                        if (item.SELL_SIGNAL_5 !== 0 || item.SELL_SIGNAL_20 !== 0) {
+                            hasSellSignal = true;
+                        }
+                    }
+                });
+
+                buyDot.style.display = hasBuySignal ? 'block' : 'none';
+                sellDot.style.display = hasSellSignal ? 'block' : 'none';
+            });
+        }
+
+        // 初始化
+        const daysRadios = document.querySelectorAll('input[name="days"]');
+        daysRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const days = parseInt(radio.value);
+                updateDots(days);
+            });
+        });
+
+        // 默认使用 90 天
+        updateDots(90);
+
+        function showTable(tableId, dirItem) {
+            const tables = document.querySelectorAll('.table-container');
+            tables.forEach(table => {
+                table.classList.remove('active');
+            });
+            const targetTable = document.getElementById(tableId);
+            if (targetTable) {
+                targetTable.classList.add('active');
+            }
+
+            const dirItems = document.querySelectorAll('#table-directory li');
+            dirItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            if (dirItem) {
+                dirItem.classList.add('active');
+            }
+        }
+
+        // 默认显示第一个表格
+        if (document.querySelectorAll('.table-container').length > 0) {
+            const firstTable = document.querySelectorAll('.table-container')[0];
+            firstTable.classList.add('active');
+            const firstDirItem = document.getElementById('dir-item-0');
+            if (firstDirItem) {
+                firstDirItem.classList.add('active');
+            }
+        }
+    </script>
+    
+    <!-- Default Statcounter code for stock-indicator-fetcher
+    https://zhaoxusun.github.io/stock-indicator-fetcher/ -->
+    <script type="text/javascript">
+        var sc_project = 13143797; 
+        var sc_invisible = 1; 
+        var sc_security = "a5bab8f7"; 
+        var scJsHost = "https://";
+
+        // Dynamically create a script element
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = scJsHost + 'statcounter.com/counter/counter.js';
+
+        // Append the script to the document body
+        document.body.appendChild(script);
+    </script>
+    <noscript><div class="statcounter"><a title="Web Analytics Made Easy -
+     " href="https://statcounter.com/" target="_blank"><img
+    class="statcounter" src="https://c.statcounter.com/13143797/0/a5bab8f7/1/"
+    alt="Web Analytics Made Easy - Statcounter"
+    referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+    <!-- End of Statcounter Code -->
+      
+    </main>
+    <footer>
+        <p>&copy; 2025 股票数据展示. 保留所有权利.</p>
+        <div class="qr-code-container">
+            <div class="qr-images-wrapper">
+                <div>
+                    <img src="../img/qrcode.png" alt="激励/捐献作者二维码" class="qr-code-image">
+                    <span class="qr-code-label">激励/捐献作者</span>
+                </div>
+                <div>
+                    <img src="../img/futugroupcode.png" alt="futu 群二维码" class="qr-code-image">
+                    <span class="qr-code-label">加入 futu 群</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+    
